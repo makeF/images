@@ -1,0 +1,89 @@
+{
+  "inbounds": [{
+    "port": 443,
+    "protocol": "vless",
+    "settings": {
+      "clients": [
+        {
+          "id": "**",
+          "flow": "xtls-rprx-direct",
+          "level": 0
+        }
+      ],
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+      },
+      "decryption": "none",
+      "fallbacks": [
+          {
+              "alpn": "http/1.1",
+              "dest": 80
+          },
+          {
+              "alpn": "h2",
+              "dest": 81
+          }
+      ]
+    },
+    "streamSettings": {
+        "network": "tcp",
+        "security": "xtls",
+        "xtlsSettings": {
+            "serverName": "demo.com",
+            "alpn": ["http/1.1", "h2"],
+            "certificates": [
+                {
+                    "certificateFile": "/usr/local/etc/xray/demo.com.pem",
+                    "keyFile": "/usr/local/etc/xray/demo.com.key"
+                }
+            ]
+        }
+    }
+  }],
+  "outbounds": [
+    {
+    "protocol": "freedom",
+    "settings": {}
+  },{
+    "protocol": "blackhole",
+    "settings": {},
+    "tag": "blocked"
+  },{
+    "tag": "vir",
+    "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "ip address",
+            "method": "aes-128-gcm",
+            "ota": false,
+            "password": "passwd",
+            "port": 1080
+          }
+        ]
+      },
+    "sniffing": {
+      "enabled": true,
+      "destOverride": ["http", "tls"]
+    },
+    "mux": {
+      "enabled": false,
+      "concurrency": -1
+    }
+  }],
+  "routing": {
+    "rules": [
+      {
+        "type": "field",
+        "domain": ["pornhub.com"],
+        "outboundTag": "vir"
+      },
+      {
+        "type": "field",
+        "ip": ["geoip:private"],
+        "outboundTag": "blocked"
+      }
+    ]
+  }
+}
